@@ -282,6 +282,16 @@ def phase_turn_threshold() -> int:
     return int(os.getenv("RPG_PHASE_TURN_THRESHOLD", "30"))
 
 
+# ── GM 叙事语言(非 UI 语言) ────────────────────────────────────────────
+def narrative_language() -> str:
+    """GM / 酒馆叙事的输出语言代码(zh=默认中文;id / en / ja / 任意语言名)。
+
+    部署级默认;用户偏好 user_preferences["gm.narrative_language"] 优先于它。
+    渲染与解析见 agents.gm.narrative_language。
+    """
+    return os.getenv("RPG_NARRATIVE_LANGUAGE", "").strip()
+
+
 # ── 黑天鹅子代理 (sprint 5) ────────────────────────────────────────────
 def enable_black_swan() -> bool:
     """是否启用 BlackSwanAgent post-GM hook。默认关闭,需 RPG_ENABLE_BLACK_SWAN=1。"""

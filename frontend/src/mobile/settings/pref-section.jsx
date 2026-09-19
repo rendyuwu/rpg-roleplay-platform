@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../icons.jsx';
+import { Select } from '../me/shared.jsx';   // 复用档案页的下拉(移动端无独立 Select primitive)
 import { SetGroup, MSlider, Toggle, usePrefSave } from './shared.jsx';
 import { changeLanguage } from '../../i18n/index.js';
 
@@ -11,12 +12,16 @@ function PrefSection({ nav }) {
   const { t } = useTranslation();
   const save = usePrefSave('pref');
   const [lang, setLang] = useState('zh-CN');
+  const [narrativeLang, setNarrativeLang] = useState('');
   const [serif, setSerif] = useState(true);
   const [auto, setAuto] = useState(true);
   const [blackSwan, setBlackSwan] = useState(false);
   const [threshold, setThreshold] = useState(0.5);
   const saveCurator = usePrefSave('curator');
   const saveBS = usePrefSave('black_swan');
+  // 叙事语言(游玩语言,≠ 界面语言):后端读 gm.narrative_language,
+  // 见 agents/gm/narrative_language.py。'' = 跟随默认。
+  const saveNarrative = usePrefSave('gm');
 
   useEffect(() => {
     let cancelled = false;
@@ -26,6 +31,7 @@ function PrefSection({ nav }) {
         if (cancelled) return;
         const p = (r && r.preferences) || {};
         if (p['pref.ui_language']) setLang(p['pref.ui_language']);
+        if (p['gm.narrative_language'] != null) setNarrativeLang(String(p['gm.narrative_language']));
         if (typeof p['pref.serif'] === 'boolean') setSerif(p['pref.serif']);
         if (typeof p['pref.autosave'] === 'boolean') setAuto(p['pref.autosave']);
         if (typeof p['black_swan.enabled'] === 'boolean') setBlackSwan(p['black_swan.enabled']);
@@ -77,6 +83,15 @@ function PrefSection({ nav }) {
           </div>
           <Toggle on={auto} onChange={(v) => { setAuto(v); save('autosave', v); }} />
         </div>
+        <Select label={t('mobile.settings.pref.narrative_lang')} value={narrativeLang}
+          onChange={(v) => { setNarrativeLang(v); saveNarrative('narrative_language', v); }}
+          options={[
+            { value: '', label: t('mobile.settings.pref.narrative_lang_default') },
+            { value: 'id', label: 'Bahasa Indonesia' },
+            { value: 'zh-TW', label: '繁體中文' },
+            { value: 'en', label: 'English' },
+            { value: 'ja', label: '日本語' },
+          ]} />
       </SetGroup>
 
       {/* GM 叙事风格 */}

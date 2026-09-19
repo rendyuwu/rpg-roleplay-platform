@@ -21,6 +21,10 @@ def _clean_path(path: str) -> str:
         "主线": "memory.main_quest",
         "记忆模式": "memory.mode",
         "权限": "permissions.mode",
+        # 本局叙事语言(≠ 界面语言):/set narrative_language=id 落到用户变量,
+        # 供 agents.gm.narrative_language 读取(存档级覆盖,优先于用户偏好/env)。
+        "叙事语言": "worldline.user_variables.narrative_language",
+        "narrative_language": "worldline.user_variables.narrative_language",
     }
     return aliases.get(path, path)
 

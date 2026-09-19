@@ -35,6 +35,7 @@
 - **LLM JSON 容错解析** → `rpg/core/json_parse.py` 的 `parse_llm_json`。
 - **供应商错误分类** → `rpg/agents/provider_errors.py` 的 `classify_provider_error`。
 - **模型/凭据解析** → `rpg/core/llm_backend.py`:`resolve_preferred_model` / `resolve_preferred_api` / `guard_byok_usable`;API key 落地 → `rpg/platform_app/user_credentials.py` 的 `resolve_api_key`。
+- **GM 叙事语言(≠ 界面语言)** → `rpg/agents/gm/narrative_language.py`(存档覆盖 `/set narrative_language=id` > 用户偏好 `gm.narrative_language` > env `RPG_NARRATIVE_LANGUAGE`;默认空 = 提示词里的中文规则生效)。设置页「偏好」有下拉(桌面 + 移动端)。严禁在别处再写死输出语言或另加语言指令。
 
 ### 前端
 - **API 调用** → `frontend/src/api-client.js`(装 `window.api.*`,同源 Cookie 会话 + SSE helper)。别自己 fetch 后端。

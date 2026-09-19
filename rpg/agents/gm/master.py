@@ -8,6 +8,7 @@ from typing import Any
 
 from agents.gm.backends import _AnthropicBackend, _OpenAICompatBackend, _VertexBackend
 from agents.gm.helpers import _anthropic_curator_tool_use, _format_tools_for_prompt
+from agents.gm.narrative_language import narrative_language_block
 from core.logging import get_logger
 
 log = get_logger(__name__)
@@ -462,6 +463,17 @@ class GameMaster:
 
     # ── 构建 system prompt ────────────────────────────────────────
     def _build_system(self, style_profile: dict | None = None) -> str:
+        """system prompt = 骨架 + 本局叙事语言覆盖块。
+
+        语言未配置 / 中文 → 追加空串,与改动前逐字一致(零回归)。非中文玩家(如印尼语)
+        靠这一块把叙事切成自己的语言 —— 覆盖块在**末尾**,压过骨架里「用中文写作」等
+        语言指令,也覆盖酒馆/自举模板那条。解析与渲染见 agents.gm.narrative_language。
+        """
+        return self._build_system_base(style_profile) + narrative_language_block(
+            getattr(self, "user_id", None), getattr(self, "_active_state", None)
+        )
+
+    def _build_system_base(self, style_profile: dict | None = None) -> str:
         """组装通用 system prompt。
 
         world_section 来源：

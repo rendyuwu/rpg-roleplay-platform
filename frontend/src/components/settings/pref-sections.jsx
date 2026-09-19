@@ -12,9 +12,13 @@ function PrefSection() {
   // task 52：从 user_preferences 拉真实初值，改动直接 patch /api/me/preference。
   const { t } = useTranslation();
   const [interfaceLang, setInterfaceLang] = useStatePL("zh-CN");
+  const [narrativeLang, setNarrativeLang] = useStatePL("");
   const [serif, setSerif] = useStatePL(true);
   const [auto, setAuto] = useStatePL(true);
   const save = useAutoSave(t('settings.nav.preferences'), "pref");
+  // 叙事语言(游玩语言,≠ 界面语言):后端读 user_preferences["gm.narrative_language"],
+  // 见 agents/gm/narrative_language.py。空串 = 跟随默认(提示词里的中文规则 / env)。
+  const saveNarrative = useAutoSave(t('settings.preferences.narrative_lang'), "gm");
   useEffectPL(() => {
     let cancelled = false;
     (async () => {
@@ -24,6 +28,7 @@ function PrefSection() {
         const p = (r && r.preferences) || {};
         if (p["pref.ui_language"]) setInterfaceLang(p["pref.ui_language"]);
         else if (p.ui_language) setInterfaceLang(p.ui_language);
+        if (p["gm.narrative_language"] != null) setNarrativeLang(String(p["gm.narrative_language"]));
         if (typeof p["pref.serif"] === "boolean") setSerif(p["pref.serif"]);
         else if (typeof p.serif === "boolean") setSerif(p.serif);
         if (typeof p["pref.autosave"] === "boolean") setAuto(p["pref.autosave"]);
@@ -42,6 +47,17 @@ function PrefSection() {
             { value: 'en', label: 'English (Beta)' },
           ]}
           onChange={(v) => { setInterfaceLang(v); save("ui_language", v); changeLanguage(v); }} />
+      </SetRow>
+      <SetRow label={t('settings.preferences.narrative_lang')} description={t('settings.preferences.narrative_lang_desc')}>
+        <SetSelect value={narrativeLang}
+          options={[
+            { value: '', label: t('settings.preferences.narrative_lang_default') },
+            { value: 'id', label: 'Bahasa Indonesia' },
+            { value: 'zh-TW', label: '繁體中文' },
+            { value: 'en', label: 'English' },
+            { value: 'ja', label: '日本語' },
+          ]}
+          onChange={(v) => { setNarrativeLang(v); saveNarrative("narrative_language", v); }} />
       </SetRow>
       <SetRow label={t('settings.preferences.serif_font')} description={t('settings.preferences.serif_font_desc')}>
         <CSToggle checked={serif} onChange={({ detail }) => { setSerif(detail.checked); save("serif", detail.checked); }}>

@@ -13,7 +13,7 @@ Python FastAPI 后端逐包/逐模块职责。给 AI 协作者:找「某功能�
 ## 回合链与 GM 服务
 
 - `chat_pipeline/` **[热路径]** — `/api/chat` SSE 流水线。`__init__.py` 编排 5 个 async-generator phase;`context.py`(取上下文)→ `directives.py`(OOC/斜杠指令)→ `rules.py`(规则桥)→ `gm.py`(`run_gm_phase`,调 GM 出文)→ `persist.py`(落库)/ `postproc.py`(异步后处理)。`_common.py` 定义 `PipelineContext`/SSE 事件。搬家不改语义:事件名/顺序与旧 app.py 一致。
-- `agents/gm/` **[热路径]** — 三贤者 GM 管线(司命/文宗/史官)。`master.py` 主编排,`backends/`(anthropic/openai_compat/_tiered 各 LLM 后端),`style_config.py`/`style_harness.py`(GM 文风),`stream_retry.py`(流式重试)。
+- `agents/gm/` **[热路径]** — 三贤者 GM 管线(司命/文宗/史官)。`master.py` 主编排,`backends/`(anthropic/openai_compat/_tiered 各 LLM 后端),`style_config.py`/`style_harness.py`(GM 文风),`narrative_language.py`(叙事语言:覆盖块追加在 system prompt 末尾,默认中文零回归),`stream_retry.py`(流式重试)。
 - `gm_serving/` **[热路径]** — 回合服务层。`serve.py` 主服务,`context_inject.py`(上下文注入),`anchor_reconcile.py` + `anchor_signature.py`(锚点对齐,import `get_progress_window`),`impact.py`(后果),`steering.py`(引导强度),`settings.py`(含 `realign_progress_signals` 进度回退)。
 - `context_engine/` — 分层上下文组装:`core.py`/`layers.py`/`projection.py`/`formatters.py`;`budget.py`(层预算全局求解 —— 纯函数,按 min/want/priority 在模型窗口内分配,宽裕时等价于每层拿满 want);`_constants.py` 的 `MAX_LAYER_CHARS` 是**层预算登记表**,漏登记会被静默截断到默认上限,守卫 `tests/unit/test_context_layer_budget_registry.py`。
 - `context_providers/` — 可插拔上下文 provider,`registry.py` 注册;含 `episodic_recall`(长程记忆)、`memory`、`npc_agenda`、`world_pulse`、`runtime_phase_digests` 等。加 provider 走 registry。
