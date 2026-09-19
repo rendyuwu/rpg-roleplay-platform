@@ -49,9 +49,14 @@ rpg/claude_design_upload
 .dev-logs
 
 # ── Secrets — must NEVER enter the image ────────────────────────────────────
+# 注意:.env 单条只匹配构建上下文根目录;rpg/.env 会漏进来并被 app.py 的
+# load_dotenv(override=True) 优先加载 → 容器内静默连 127.0.0.1:5432。
 .env
 .env.*
+**/.env
+**/.env.*
 !.env.example
+!**/.env.example
 **/master.key
 **/*.pem
 **/*.key

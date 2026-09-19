@@ -77,6 +77,7 @@ _PRIVATE_LAN_NETS = (
     ip_network("172.16.0.0/12"),
     ip_network("192.168.0.0/16"),
     ip_network("100.64.0.0/10"),   # RFC6598 CGNAT / Tailscale 等网状 VPN
+    ip_network("11.12.13.0/24"),   # 本站 WireGuard VPN 网段(非 RFC1918,需显式列出)
     ip_network("fc00::/7"),        # IPv6 ULA(含 Tailscale fd7a::/48)
     ip_network("fe80::/10"),       # IPv6 链路本地
 )
@@ -87,6 +88,7 @@ _LOCAL_LAN_ORIGIN_REGEX = (
     r"|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}"      # 172.16–31.x.x
     r"|192\.168(?:\.\d{1,3}){2}"                       # 192.168.x.x
     r"|100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])(?:\.\d{1,3}){2}"  # 100.64–127.x.x CGNAT/Tailscale
+    r"|11\.12\.13(?:\.\d{1,3})"                        # 11.12.13.0/24 WireGuard VPN
     r"|\[[fF][cCdD][0-9a-fA-F:]*\]"                    # IPv6 ULA fc00::/7
     r"|\[[fF][eE][89aAbB][0-9a-fA-F:]*\]"              # IPv6 链路本地 fe80::/10
     r")(?::\d{1,5})?$"

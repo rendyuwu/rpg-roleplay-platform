@@ -37,7 +37,8 @@ services:
 
   # ─── 2. PgBouncer — 连接池(transaction 模式) ──────────────────────────────
   pgbouncer:
-    image: bitnami/pgbouncer:1.22.1
+    # bitnami/pgbouncer 旧 tag 已下架 → 只能从 legacy 命名空间拉
+    image: bitnamilegacy/pgbouncer:1.22.1
     container_name: rpg-pgbouncer
     restart: unless-stopped
     depends_on:
@@ -45,9 +46,11 @@ services:
         condition: service_healthy
     environment:
       # Bitnami pgbouncer 通过 env 驱动配置
+      # 注意:后端主机变量名是 POSTGRESQL_HOST(不是 PGBOUNCER_HOST)
+      POSTGRESQL_HOST: postgres
+      POSTGRESQL_PORT: 5432
+      POSTGRESQL_DATABASE: rpg
       PGBOUNCER_DATABASE: rpg
-      PGBOUNCER_HOST: postgres
-      PGBOUNCER_PORT: 5432
       PGBOUNCER_POOL_MODE: transaction
       PGBOUNCER_MAX_CLIENT_CONN: "1000"
       PGBOUNCER_DEFAULT_POOL_SIZE: "20"
@@ -65,7 +68,8 @@ services:
       - ./pgbouncer.ini:/bitnami/pgbouncer/conf/pgbouncer.ini:ro
       - ./userlist.txt:/bitnami/pgbouncer/conf/userlist.txt:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h localhost -p 6432 -U rpg"]
+      # 该镜像无 pg_isready(legacy bitnami 不含 postgresql-client);用 bash /dev/tcp 探端口
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/6432'"]
       interval: 10s
       timeout: 5s
       retries: 5

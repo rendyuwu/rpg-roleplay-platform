@@ -115,19 +115,35 @@ cp .env.example .env
 
 ```bash
 cd deploy/
-# 首次启动(含镜像构建)
+# 首次部署:先建库(直连 5432 跑 migration —— 运行时走 pgbouncer 的 advisory lock 会失败)
+docker compose up -d postgres pgbouncer
+set -a && . ./.env && set +a
+docker compose run --rm -T \
+  -e DATABASE_URL="postgres://rpg:${POSTGRES_PASSWORD}@postgres:5432/rpg" \
+  backend python -m platform_app.migrate full
+
+# 起全栈(含镜像构建)
 docker compose up --build -d
 
 # 查看日志
 docker compose logs -f backend
 
-# 健康检查
-curl http://localhost:7860/livez
-curl http://localhost:7860/readyz
+# 健康检查(/api/state 匿名 401 也说明进程已就绪;/livez /readyz 是旧 Rust 版遗留,不存在)
+curl -i http://localhost:7860/api/state
 
 # 停止
 docker compose down
 ```
+
+> **端口避让**:compose 默认把 postgres 5432 / pgbouncer 6432 / redis 6379 / backend 7860
+> 绑到本机。主机上已有同端口服务时,不要改 `docker-compose.yml`,新建
+> `docker-compose.override.yml` 覆盖 `ports`(该文件按约定不入 git),例如:
+>
+> ```yaml
+> services:
+>   postgres:
+>     ports: !override ["127.0.0.1:15432:5432"]
+> ```
 
 ## Kubernetes 部署
 
