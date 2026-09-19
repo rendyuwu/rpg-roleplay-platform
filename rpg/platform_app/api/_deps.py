@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 
 from fastapi import Depends, HTTPException, Request
@@ -15,6 +16,8 @@ from ..db import connect, init_db
 
 SESSION_COOKIE = "rpg_session"
 API_VERSION = "1"
+
+log = logging.getLogger(__name__)
 
 COMMANDS = [
     ("GET", "/", "Backend root (service info JSON)"),
@@ -219,7 +222,12 @@ def current_user(request: Request) -> dict | None:
                 _ENSURED_DEFAULT_USERS.add(uid)
         return user
     except Exception:
-        return None
+        # 依赖故障 ≠ 未登录:原实现吞掉异常返回 None,所有调用方一律翻成 401 →
+        # 前端 api-client 对每个 401 都硬跳 Login.html、登录页见会话有效又跳回来 =
+        # 故障期间页面每几秒自动刷新一次(2026-09 pgbouncer 预处理语句不兼容时实测)。
+        # 如实向上抛:FastAPI 记 500(日志有栈),前端只对 401 跳登录页。
+        log.exception("[auth] 会话校验失败 —— 按服务端故障上报,不当作「未登录」")
+        raise
 
 
 def require_user(request: Request) -> dict:

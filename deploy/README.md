@@ -19,6 +19,10 @@
 
 - **跑 migration 时**：`DATABASE_URL` 必须指向直连 Postgres 5432
 - **运行时 uvicorn**：`DATABASE_URL` 可走 PgBouncer 6432（事务级连接池）
+- **服务端预处理语句**：同属会话级特性，transaction 模式下会随事务落到别的后端连接上。
+  应用侧已在连接池关闭（`platform_app/db/connection.py` → `prepare_threshold=None`）；
+  若重新开启，容器跑几秒后会开始随机报 `prepared statement "_pg3_N" does not exist` →
+  随机 401 → 前端在应用与登录页之间反复跳（表现为「网页每几秒自动刷新一次」）。
 
 若 Docker Compose 的 `DATABASE_URL` 指向 pgbouncer:6432，启动前请先用直连跑一次 `migrate full`，
 或确保 `RPG_SKIP_AUTO_MIGRATE=1` 且 docker exec 进容器用直连 URL 跑 migrate。

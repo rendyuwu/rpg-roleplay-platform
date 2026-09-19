@@ -962,15 +962,21 @@ def bootstrap_local_account(username: str = "local", display_name: str = "本地
         if row:
             return dict(row)
         uname = normalize_username(username) or "local"
+        # on conflict do nothing:多 worker 容器(compose 默认 RPG_WORKERS=4)启动时并发跑本函数,
+        # 上面「查一次再插」挡不住竞态 —— 其余 worker 撞 users_username_key 报 UniqueViolation
+        # (实测每次启动 3 条 ERROR 栈)。冲突即代表别人已插好,取那行即可。
         row = db.execute(
             """
             insert into users(username, password_hash, display_name, role,
                               email, email_verified, age_confirmed, terms_accepted_at)
             values (%s, null, %s, 'admin', '', false, true, now())
+            on conflict (username) do nothing
             returning *
             """,
             (uname, (display_name or uname)),
         ).fetchone()
+        if row is None:
+            row = db.execute("select * from users order by id asc limit 1").fetchone()
         return dict(row)
 
 
